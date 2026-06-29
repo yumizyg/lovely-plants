@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+.vs/
+artifacts/latest/
+artifacts/preview/
+artifacts/publish/
+artifacts/*.exe
+artifacts/*.png
+*.user
