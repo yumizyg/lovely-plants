@@ -11,11 +11,6 @@ English: The current project focus is “low distraction, low overhead, and long
 中文：如果你是普通用户，只需要下载打包好的安装程序并双击安装，不需要关心源码、测试或打包脚本。  
 English: If you are an end user, you only need the packaged installer and can install it by double-clicking it; you do not need to care about the source code, tests, or packaging scripts.
 
-中文：如果你是素材作者或合作伙伴，可以重点查看 `src/DesktopGarden/Assets` 中实际被软件使用的素材，以及 `README` 中的界面说明和预览图。  
-English: If you are the asset creator or a collaborator, you will mainly care about the production assets under `src/DesktopGarden/Assets` and the interface notes and preview images in this `README`.
-
-中文：如果你是开发者，需要使用完整仓库，包括 `src`、`tests`、`installer`、`DesktopGarden.sln` 和文档目录，才能继续开发、测试和重新打包。  
-English: If you are a developer, you need the full repository—including `src`, `tests`, `installer`, `DesktopGarden.sln`, and the docs directory—to continue development, testing, and repackaging.
 
 ## Preview / 预览
 
@@ -24,12 +19,12 @@ English: If you are a developer, you need the full repository—including `src`,
 中文：启动动画会以这张背景图为底图，并在中央显示放大的 `Lovely Plants` 标题，在右下角显示作者署名。  
 English: The startup animation uses this background as its base image, shows an enlarged `Lovely Plants` title in the center, and places the author credit in the lower-right corner.
 
-![Garden Overview](docs/images/garden-overview.png)
+![Garden Overview](docs/images/1.png)
 
 中文：主界面会把花盆栏固定在桌面底部，底部附带独立的工作时间与番茄钟信息条。  
 English: The main view anchors the garden row at the bottom of the desktop and includes a separate footer strip for work time and pomodoro timing.
 
-![UI Panels](docs/images/ui-panels.png)
+![UI Panels](docs/images/3.png)
 
 中文：悬浮信息卡和右键检查面板会显示植物阶段、成长进度、素材切换和单盆缩放等信息。  
 English: The hover info card and right-click inspector panel show plant stage, growth progress, asset switching, and per-pot scaling controls.
@@ -48,6 +43,8 @@ English: Each slot is composited from three visual layers—plant, pot, and expr
 
 中文：植物成长只统计软件实际运行时间，累计 8 小时进入第二阶段，累计 40 小时进入第三阶段；关闭软件后不会离线成长。  
 English: Plant growth only counts real app runtime: stage two starts after 8 accumulated hours and stage three starts after 40 accumulated hours; plants do not grow while the app is closed.
+
+![Plants Overview](docs/images/1.png)
 
 中文：更换植物会清空该花盆的成长时间，但花盆、表情和缩放设置可以继续保留。  
 English: Changing the plant resets growth time for that pot, while the selected pot, expression, and scale can remain unchanged.
