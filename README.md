@@ -93,6 +93,17 @@ English: The tray menu can be used to add pots, adjust spacing, open the plant c
 中文：新增花盆后不会自动附带植物，必须手动选择植物后才开始成长。  
 English: Newly added pots do not start with a plant automatically; growth begins only after a plant is selected manually.
 
+## Uninstall / 卸载说明
+
+中文：安装完成后，用户可以在 Windows 的 `设置 -> 应用 -> 已安装的应用` 中找到 `Lovely Plants`，然后选择卸载。  
+English: After installation, users can find `Lovely Plants` in `Settings -> Apps -> Installed apps` on Windows and uninstall it there.
+
+中文：如果用户更习惯从安装目录处理，也可以进入默认安装路径 `%LocalAppData%\Programs\Lovely Plants`，运行卸载程序 `unins000.exe`。  
+English: If the user prefers working from the install folder, they can go to `%LocalAppData%\Programs\Lovely Plants` and run the uninstaller `unins000.exe`.
+
+中文：卸载会移除程序文件，但通常不会自动删除用户状态数据；如果需要彻底清除成长记录和设置，还可以手动删除 `%LocalAppData%\LovelyPlants` 目录。  
+English: Uninstalling removes the app files, but usually does not delete user state automatically; to fully clear growth records and settings, users can also manually delete `%LocalAppData%\LovelyPlants`.
+
 ## Data Storage / 数据存储
 
 中文：用户状态保存在 `%LocalAppData%\LovelyPlants\state.json`，其中包含花盆顺序、植物类型、表情、缩放和累计成长时间。  
@@ -106,8 +117,8 @@ English: The app saves periodically and once again during normal exit; if the st
 中文：项目使用 .NET 8 自包含发布，并通过 Inno Setup 生成标准 Windows 安装包。  
 English: The project is published as a .NET 8 self-contained build and packaged into a standard Windows installer through Inno Setup.
 
-中文：当前本地生成的安装包文件名为 `artifacts/LovelyPlants-Setup-1.1.0.exe`。  
-English: The current locally generated installer is named `artifacts/LovelyPlants-Setup-1.1.0.exe`.
+中文：当前本地生成的安装包文件名为 `artifacts/LovelyPlants-Setup-1.1.1.exe`。  
+English: The current locally generated installer is named `artifacts/LovelyPlants-Setup-1.1.1.exe`.
 
 ## Build / 构建
 

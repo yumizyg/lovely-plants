@@ -28,6 +28,7 @@ public sealed class AppSettings
     public int MonitorIndex { get; set; }
     public float Scale { get; set; } = 0.70f;
     public float GapScale { get; set; } = 1f;
+    public bool ShowGrassBackground { get; set; } = true;
     public bool AlwaysOnTop { get; set; } = true;
     public bool InteractionLocked { get; set; }
     public bool SoundEnabled { get; set; }

@@ -13,7 +13,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
         "外卖想好了吗，按时吃饭比赶进度更重要。",
         "屏幕看久了，眨眨眼休息十秒。",
         "先伸个懒腰，我们继续往前做。",
-        "任务很多也没关系，一点点做完就很好。",
+        "任务很多也没关系，一点点做完就很棒。",
         "如果卡住了，先深呼吸一下再看。",
         "辛苦了，给自己一个小小的暂停。",
         "今天要努力，也要记得温柔一点。"
@@ -25,6 +25,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
     private readonly Stopwatch _runtime = Stopwatch.StartNew();
     private readonly System.Windows.Forms.Timer _saveTimer;
     private readonly NotifyIcon _tray;
+    private readonly ContextMenuStrip _quickActionsMenu;
     private readonly PlantInfoForm _plantInfo = new();
     private readonly ReminderBubbleForm _reminderBubble = new();
     private readonly Random _random = new();
@@ -47,12 +48,13 @@ internal sealed class GardenApplicationContext : ApplicationContext
         _garden = CreateGardenForm();
         MainForm = _garden;
 
+        _quickActionsMenu = BuildQuickActionsMenu();
         _tray = new NotifyIcon
         {
             Text = "Lovely Plants",
             Icon = LoadApplicationIcon(),
             Visible = true,
-            ContextMenuStrip = BuildTrayMenu()
+            ContextMenuStrip = _quickActionsMenu
         };
         _tray.DoubleClick += (_, _) => ToggleGarden();
 
@@ -81,6 +83,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
         SaveNow();
         _saveTimer.Stop();
         _saveTimer.Dispose();
+        _quickActionsMenu.Dispose();
         _inspector?.Dispose();
         _plantInfo.Dispose();
         _reminderBubble.Dispose();
@@ -101,12 +104,15 @@ internal sealed class GardenApplicationContext : ApplicationContext
         form.ReminderDue += ShowRandomReminder;
         form.PomodoroConfigureRequested += OpenPomodoroSettings;
         form.PomodoroCompleted += ShowPomodoroReminder;
+        form.QuickMenuRequested += ShowQuickActionsMenu;
         return form;
     }
 
-    private ContextMenuStrip BuildTrayMenu()
+    private ContextMenuStrip BuildQuickActionsMenu()
     {
         var menu = new ContextMenuStrip();
+        FluentTheme.StyleMenu(menu);
+
         var add = new ToolStripMenuItem("添加花盆", null, (_, _) => AddPot());
         var spacing = new ToolStripMenuItem("调整间距", null, (_, _) => OpenSpacing());
         var catalog = new ToolStripMenuItem("植物图鉴", null, (_, _) => OpenCatalog());
@@ -114,8 +120,23 @@ internal sealed class GardenApplicationContext : ApplicationContext
         _lockItem = new ToolStripMenuItem("锁定交互", null, (_, _) => ToggleLock());
         var settings = new ToolStripMenuItem("设置", null, (_, _) => OpenSettings());
         var exit = new ToolStripMenuItem("退出", null, (_, _) => ExitThread());
+
         menu.Items.AddRange([add, spacing, catalog, _visibilityItem, _lockItem, new ToolStripSeparator(), settings, new ToolStripSeparator(), exit]);
+        foreach (ToolStripItem item in menu.Items)
+        {
+            item.Padding = new Padding(12, 8, 12, 8);
+        }
+
         return menu;
+    }
+
+    private void ShowQuickActionsMenu(Rectangle anchor)
+    {
+        HideTransientUi();
+        UpdateMenuText();
+        var x = anchor.Left;
+        var y = Math.Max(0, anchor.Top - _quickActionsMenu.GetPreferredSize(Size.Empty).Height - 8);
+        _quickActionsMenu.Show(x, y);
     }
 
     private void ShowInspector(PotInstance pot, Rectangle anchor)
@@ -242,7 +263,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
 
     private void DeletePot(PotInstance pot)
     {
-        if (MessageBox.Show("确定移除这盆植物吗？成长时间也会一并删除。", "移除花盆", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK)
+        if (MessageBox.Show("确定移除这盆植物吗？成长时间也会一起删除。", "移除花盆", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK)
         {
             return;
         }
@@ -273,9 +294,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
         }
         else
         {
-            _inspector?.Close();
-            _plantInfo.Hide();
-            _reminderBubble.Hide();
+            HideTransientUi();
             _garden.Hide();
         }
 
@@ -293,9 +312,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
 
     private void OpenSettings()
     {
-        _inspector?.Close();
-        _plantInfo.Hide();
-        _reminderBubble.Hide();
+        HideTransientUi();
         using var settings = new SettingsForm(_state.Settings);
         var originalSettings = CloneSettings(_state.Settings);
         var reset = false;
@@ -306,13 +323,14 @@ internal sealed class GardenApplicationContext : ApplicationContext
             _state.Settings.GapScale = preview.GapScale;
             _state.Settings.AlwaysOnTop = preview.AlwaysOnTop;
             _state.Settings.InteractionLocked = preview.InteractionLocked;
+            _state.Settings.ShowGrassBackground = preview.ShowGrassBackground;
             _state.Settings.SoundEnabled = preview.SoundEnabled;
             _state.Settings.StartWithWindows = preview.StartWithWindows;
             _garden.RenderNow();
         };
         settings.ResetRequested += () =>
         {
-            if (MessageBox.Show("这会删除所有成长时间并恢复三盆初始植物。", "重置花园", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
+            if (MessageBox.Show("这会删除所有成长时间，并恢复三盆初始植物。", "重置花园", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
             {
                 reset = true;
                 settings.DialogResult = DialogResult.Cancel;
@@ -343,9 +361,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
 
     private void OpenSpacing()
     {
-        _inspector?.Close();
-        _plantInfo.Hide();
-        _reminderBubble.Hide();
+        HideTransientUi();
         using var spacing = new SpacingForm(_state.Settings.GapScale);
         if (spacing.ShowDialog() != DialogResult.OK) return;
 
@@ -356,9 +372,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
 
     private void OpenCatalog()
     {
-        _inspector?.Close();
-        _plantInfo.Hide();
-        _reminderBubble.Hide();
+        HideTransientUi();
         using var catalog = new PlantCatalogForm(_catalog);
         catalog.ShowDialog();
     }
@@ -375,9 +389,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
 
     private void ResetGarden()
     {
-        _inspector?.Close();
-        _plantInfo.Hide();
-        _reminderBubble.Hide();
+        HideTransientUi();
         var defaults = CreateDefaultState();
         _state.Pots = defaults.Pots;
         _state.Settings = defaults.Settings;
@@ -399,6 +411,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
         _state.Settings.GapScale = snapshot.GapScale;
         _state.Settings.AlwaysOnTop = snapshot.AlwaysOnTop;
         _state.Settings.InteractionLocked = snapshot.InteractionLocked;
+        _state.Settings.ShowGrassBackground = snapshot.ShowGrassBackground;
         _state.Settings.SoundEnabled = snapshot.SoundEnabled;
         _state.Settings.StartWithWindows = snapshot.StartWithWindows;
         _state.Settings.GardenVisible = snapshot.GardenVisible;
@@ -413,6 +426,7 @@ internal sealed class GardenApplicationContext : ApplicationContext
         GapScale = source.GapScale,
         AlwaysOnTop = source.AlwaysOnTop,
         InteractionLocked = source.InteractionLocked,
+        ShowGrassBackground = source.ShowGrassBackground,
         SoundEnabled = source.SoundEnabled,
         StartWithWindows = source.StartWithWindows,
         GardenVisible = source.GardenVisible,
@@ -450,6 +464,13 @@ internal sealed class GardenApplicationContext : ApplicationContext
         if (anchor is null) return;
         _reminderBubble.ShowReminder("番茄钟结束了，休息一下再继续。", anchor.Value, _garden, 3000);
         PlayFeedbackSound();
+    }
+
+    private void HideTransientUi()
+    {
+        _inspector?.Close();
+        _plantInfo.Hide();
+        _reminderBubble.Hide();
     }
 
     private void PlayFeedbackSound()

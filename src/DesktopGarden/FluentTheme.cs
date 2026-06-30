@@ -9,8 +9,10 @@ internal static class FluentTheme
     internal static readonly Color Text = Color.FromArgb(32, 36, 32);
     internal static readonly Color TextMuted = Color.FromArgb(103, 111, 104);
     internal static readonly Color Border = Color.FromArgb(220, 229, 221);
+    internal static readonly Color BorderStrong = Color.FromArgb(202, 214, 204);
     internal static readonly Color Accent = Color.FromArgb(111, 143, 114);
     internal static readonly Color AccentSoft = Color.FromArgb(229, 237, 229);
+    internal static readonly Color SurfaceOverlay = Color.FromArgb(248, 250, 247);
     internal static readonly Color Coral = Color.FromArgb(227, 130, 112);
     internal static readonly Color Danger = Color.FromArgb(180, 76, 63);
     internal static readonly Font Body = new("Microsoft YaHei UI", 9f);
@@ -42,6 +44,17 @@ internal static class FluentTheme
         path.AddArc(0, size.Height - diameter - 1, diameter, diameter, 90, 90);
         path.CloseFigure();
         return new Region(path);
+    }
+
+    internal static void StyleMenu(ContextMenuStrip menu)
+    {
+        menu.RenderMode = ToolStripRenderMode.Professional;
+        menu.Renderer = new FluentMenuRenderer();
+        menu.BackColor = SurfaceRaised;
+        menu.ForeColor = Text;
+        menu.ShowImageMargin = false;
+        menu.Padding = new Padding(8);
+        menu.Font = Body;
     }
 }
 
@@ -211,4 +224,60 @@ internal sealed class FluentSlider : Control
         var ratio = Math.Clamp((x - 6d) / Math.Max(1, Width - 12), 0, 1);
         Value = (int)Math.Round((Minimum + ratio * (Maximum - Minimum)) / 5d) * 5;
     }
+}
+
+internal sealed class FluentMenuRenderer() : ToolStripProfessionalRenderer(new FluentMenuColorTable())
+{
+    protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+    {
+        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        using var pen = new Pen(FluentTheme.BorderStrong);
+        var bounds = new Rectangle(0, 0, e.ToolStrip.Width - 1, e.ToolStrip.Height - 1);
+        using var path = RoundedPath(bounds, 10);
+        e.Graphics.DrawPath(pen, path);
+    }
+
+    protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+    {
+        var itemBounds = new Rectangle(4, 2, e.Item.Width - 8, e.Item.Height - 4);
+        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        var background = e.Item.Selected ? FluentTheme.AccentSoft : FluentTheme.SurfaceRaised;
+        using var brush = new SolidBrush(background);
+        using var path = RoundedPath(itemBounds, 8);
+        e.Graphics.FillPath(brush, path);
+    }
+
+    protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
+    {
+        using var pen = new Pen(FluentTheme.Border);
+        var y = e.Item.Bounds.Top + e.Item.Bounds.Height / 2;
+        e.Graphics.DrawLine(pen, e.Item.Bounds.Left + 10, y, e.Item.Bounds.Right - 10, y);
+    }
+
+    private static GraphicsPath RoundedPath(Rectangle bounds, int radius)
+    {
+        var path = new GraphicsPath();
+        var diameter = radius * 2;
+        path.AddArc(bounds.Left, bounds.Top, diameter, diameter, 180, 90);
+        path.AddArc(bounds.Right - diameter, bounds.Top, diameter, diameter, 270, 90);
+        path.AddArc(bounds.Right - diameter, bounds.Bottom - diameter, diameter, diameter, 0, 90);
+        path.AddArc(bounds.Left, bounds.Bottom - diameter, diameter, diameter, 90, 90);
+        path.CloseFigure();
+        return path;
+    }
+}
+
+internal sealed class FluentMenuColorTable : ProfessionalColorTable
+{
+    public override Color ToolStripDropDownBackground => FluentTheme.SurfaceRaised;
+    public override Color MenuBorder => Color.Transparent;
+    public override Color MenuItemBorder => Color.Transparent;
+    public override Color MenuItemSelected => FluentTheme.AccentSoft;
+    public override Color MenuItemSelectedGradientBegin => FluentTheme.AccentSoft;
+    public override Color MenuItemSelectedGradientEnd => FluentTheme.AccentSoft;
+    public override Color MenuItemPressedGradientBegin => FluentTheme.SurfaceOverlay;
+    public override Color MenuItemPressedGradientMiddle => FluentTheme.SurfaceOverlay;
+    public override Color MenuItemPressedGradientEnd => FluentTheme.SurfaceOverlay;
+    public override Color SeparatorDark => FluentTheme.Border;
+    public override Color SeparatorLight => FluentTheme.Border;
 }

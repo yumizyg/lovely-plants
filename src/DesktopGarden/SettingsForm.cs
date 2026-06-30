@@ -11,6 +11,7 @@ internal sealed class SettingsForm : Form
     private readonly Label _gapScaleValue = new() { AutoSize = true };
     private readonly CheckBox _topMost = new() { Text = "始终置顶", AutoSize = true };
     private readonly CheckBox _locked = new() { Text = "锁定后鼠标穿透", AutoSize = true };
+    private readonly CheckBox _showGrass = new() { Text = "显示草地背景", AutoSize = true };
     private readonly CheckBox _sound = new() { Text = "交互/提醒音效", AutoSize = true };
     private readonly CheckBox _startup = new() { Text = "开机自动启动", AutoSize = true };
 
@@ -22,8 +23,8 @@ internal sealed class SettingsForm : Form
         MaximizeBox = false;
         MinimizeBox = false;
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(470, 500);
-        MinimumSize = new Size(470, 500);
+        ClientSize = new Size(470, 540);
+        MinimumSize = new Size(470, 540);
         BackColor = Color.FromArgb(248, 247, 243);
         Font = new Font("Microsoft YaHei UI", 9f);
 
@@ -37,8 +38,10 @@ internal sealed class SettingsForm : Form
         _gapScale.Value = (int)Math.Round(Math.Clamp(settings.GapScale, 0.6f, 2f) * 100);
         _topMost.Checked = settings.AlwaysOnTop;
         _locked.Checked = settings.InteractionLocked;
+        _showGrass.Checked = settings.ShowGrassBackground;
         _sound.Checked = settings.SoundEnabled;
         _startup.Checked = settings.StartWithWindows;
+
         UpdateScaleLabel();
         UpdateGapScaleLabel();
         _scale.ValueChanged += (_, _) =>
@@ -51,6 +54,12 @@ internal sealed class SettingsForm : Form
             UpdateGapScaleLabel();
             PreviewChanged?.Invoke(CaptureSettings());
         };
+        _topMost.CheckedChanged += (_, _) => PreviewChanged?.Invoke(CaptureSettings());
+        _locked.CheckedChanged += (_, _) => PreviewChanged?.Invoke(CaptureSettings());
+        _showGrass.CheckedChanged += (_, _) => PreviewChanged?.Invoke(CaptureSettings());
+        _sound.CheckedChanged += (_, _) => PreviewChanged?.Invoke(CaptureSettings());
+        _startup.CheckedChanged += (_, _) => PreviewChanged?.Invoke(CaptureSettings());
+        _monitor.SelectedIndexChanged += (_, _) => PreviewChanged?.Invoke(CaptureSettings());
 
         var content = new Panel
         {
@@ -63,7 +72,7 @@ internal sealed class SettingsForm : Form
         {
             Dock = DockStyle.Top,
             ColumnCount = 2,
-            RowCount = 9,
+            RowCount = 10,
             AutoSize = true,
             AutoSizeMode = AutoSizeMode.GrowAndShrink
         };
@@ -82,12 +91,14 @@ internal sealed class SettingsForm : Form
 
         _topMost.Margin = new Padding(0, 16, 0, 0);
         _locked.Margin = new Padding(0, 10, 0, 0);
+        _showGrass.Margin = new Padding(0, 10, 0, 0);
         _sound.Margin = new Padding(0, 10, 0, 0);
         _startup.Margin = new Padding(0, 10, 0, 0);
         layout.Controls.Add(_topMost, 1, 3);
         layout.Controls.Add(_locked, 1, 4);
-        layout.Controls.Add(_sound, 1, 5);
-        layout.Controls.Add(_startup, 1, 6);
+        layout.Controls.Add(_showGrass, 1, 5);
+        layout.Controls.Add(_sound, 1, 6);
+        layout.Controls.Add(_startup, 1, 7);
 
         var soundHint = new Label
         {
@@ -96,7 +107,7 @@ internal sealed class SettingsForm : Form
             ForeColor = FluentTheme.TextMuted,
             Margin = new Padding(2, 4, 0, 0)
         };
-        layout.Controls.Add(soundHint, 1, 7);
+        layout.Controls.Add(soundHint, 1, 8);
 
         var reset = new Button
         {
@@ -106,7 +117,7 @@ internal sealed class SettingsForm : Form
             Margin = new Padding(0, 18, 0, 0)
         };
         reset.Click += (_, _) => ResetRequested?.Invoke();
-        layout.Controls.Add(reset, 1, 8);
+        layout.Controls.Add(reset, 1, 9);
 
         var footer = new FlowLayoutPanel
         {
@@ -139,6 +150,7 @@ internal sealed class SettingsForm : Form
         settings.GapScale = preview.GapScale;
         settings.AlwaysOnTop = preview.AlwaysOnTop;
         settings.InteractionLocked = preview.InteractionLocked;
+        settings.ShowGrassBackground = preview.ShowGrassBackground;
         settings.SoundEnabled = preview.SoundEnabled;
         settings.StartWithWindows = preview.StartWithWindows;
     }
@@ -150,6 +162,7 @@ internal sealed class SettingsForm : Form
         GapScale = _gapScale.Value / 100f,
         AlwaysOnTop = _topMost.Checked,
         InteractionLocked = _locked.Checked,
+        ShowGrassBackground = _showGrass.Checked,
         SoundEnabled = _sound.Checked,
         StartWithWindows = _startup.Checked
     };

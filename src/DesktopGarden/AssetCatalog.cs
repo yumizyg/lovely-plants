@@ -64,6 +64,8 @@ internal sealed partial class AssetCatalog
 
     public string ExpressionPath(string id) => _expressions.TryGetValue(id, out var path) ? path : _expressions.Values.First();
 
+    public string GrassPath => System.IO.Path.Combine(Root, "glass.png");
+
     public string PlantName(string id) => string.IsNullOrWhiteSpace(id) ? "未种植" : PlantNames.TryGetValue(id, out var name) ? name : id;
 
     public string PotName(string id) => $"花盆 {Math.Max(0, PotIds.ToList().IndexOf(id)) + 1}";

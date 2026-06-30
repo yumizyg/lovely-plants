@@ -6,7 +6,7 @@ namespace DesktopGarden;
 
 internal enum PotAnimationKind { Water }
 
-internal enum FooterControlKind { WorkTimer, Pomodoro }
+internal enum FooterControlKind { Menu, WorkTimer, Pomodoro }
 
 internal sealed record PotAnimation(PotAnimationKind Kind, DateTime StartedUtc)
 {
@@ -31,22 +31,24 @@ internal sealed record GardenRenderResult(
 
 internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
 {
-    private const int FooterHeight = 70;
+    private const int FooterHeight = 76;
     private const int FooterTopPadding = 12;
-    private const int FooterCardWidth = 246;
-    private const int FooterCardHeight = 42;
+    private const int FooterVerticalLift = 55;
+    private const int FooterMenuButtonSize = 42;
+    private const int FooterCardWidth = 238;
+    private const int FooterCardHeight = 46;
     private const int FooterCardGap = 12;
     private const int FooterSidePadding = 12;
+    private const float GrassOverlapRatio = 0.46f;
+    private const int GrassBaseHeight = 224;
+    private const int GrassVerticalLift = 25;
 
     public Size Measure(GardenState state, float effectiveScale)
     {
-        var gap = Scale(LayoutCalculator.GetGap(state.Settings.GapScale), effectiveScale);
-        var sizes = GetSlotSizes(state.Pots, effectiveScale);
-        var potHeight = Math.Max(1, sizes.Count == 0 ? Scale(LayoutCalculator.BaseSlotHeight, effectiveScale) : sizes.Max(size => size.Height));
-        var potWidth = Math.Max(1, sizes.Sum(size => size.Width) + Math.Max(0, state.Pots.Count - 1) * gap);
+        var layout = BuildLayout(state.Pots, state.Settings.GapScale, effectiveScale);
         return new Size(
-            Math.Max(potWidth, FooterContentWidth),
-            potHeight + FooterTopPadding + FooterHeight);
+            Math.Max(layout.PotStripWidth, FooterContentWidth),
+            layout.PotAreaHeight + FooterTopPadding + FooterHeight);
     }
 
     public GardenRenderResult Render(
@@ -62,13 +64,9 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
         DateTime? renderTimeUtc = null)
     {
         var pots = arrangedPots ?? state.Pots;
-        var count = Math.Max(1, pots.Count);
-        var gap = Scale(LayoutCalculator.GetGap(state.Settings.GapScale), effectiveScale);
-        var slotSizes = GetSlotSizes(pots, effectiveScale);
-        var potWidth = slotSizes.Sum(size => size.Width) + Math.Max(0, count - 1) * gap;
-        var potAreaHeight = slotSizes.Count == 0 ? Scale(LayoutCalculator.BaseSlotHeight, effectiveScale) : slotSizes.Max(size => size.Height);
-        var width = Math.Max(potWidth, FooterContentWidth);
-        var height = potAreaHeight + FooterTopPadding + FooterHeight;
+        var layout = BuildLayout(pots, state.Settings.GapScale, effectiveScale);
+        var width = Math.Max(layout.PotStripWidth, FooterContentWidth);
+        var height = layout.PotAreaHeight + FooterTopPadding + FooterHeight;
         width = Math.Max(1, width);
         height = Math.Max(1, height);
         var bitmap = target ?? new Bitmap(width, height, PixelFormat.Format32bppPArgb);
@@ -84,11 +82,16 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
         graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
         var now = renderTimeUtc ?? DateTime.UtcNow;
-        var x = Math.Max(0, (width - potWidth) / 2);
+        var x = Math.Max(0, (width - layout.PotStripWidth) / 2);
+        if (state.Settings.ShowGrassBackground)
+        {
+            DrawGrass(graphics, x, height - FooterHeight - GrassVerticalLift, layout.PotStripWidth, layout.GrassHeight);
+        }
+
         for (var index = 0; index < pots.Count; index++)
         {
-            var size = slotSizes[index];
-            var slot = new Rectangle(x, potAreaHeight - size.Height, size.Width, size.Height);
+            var size = layout.SlotSizes[index];
+            var slot = new Rectangle(x, layout.PotBaselineY - size.Height, size.Width, size.Height);
             slots.Add(slot);
             var pot = pots[index];
             DrawPot(
@@ -99,7 +102,7 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
                 animations.GetValueOrDefault(pot.Id),
                 draggedPotId == pot.Id ? dragOffsetX : 0,
                 now);
-            x += size.Width + gap;
+            x += size.Width + layout.Gap;
         }
 
         var footerControls = DrawFooterOverlayAndCapture(graphics, new Size(width, height), overlay);
@@ -125,6 +128,7 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
     {
         graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
         var controls = ComputeFooterControls(canvasSize);
+        DrawMenuButton(graphics, controls[FooterControlKind.Menu]);
         DrawTimerCard(graphics, controls[FooterControlKind.WorkTimer], "工", "工作时间", overlay.WorkTimeText, FluentTheme.Accent, FluentTheme.Text);
         var pomodoroColor = overlay.PomodoroExpired ? FluentTheme.Danger : FluentTheme.Coral;
         var valueColor = overlay.PomodoroExpired ? FluentTheme.Danger : FluentTheme.Text;
@@ -136,17 +140,36 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
     {
         var totalWidth = FooterContentWidth - FooterSidePadding * 2;
         var startX = (canvasSize.Width - totalWidth) / 2;
-        var y = canvasSize.Height - FooterHeight + 14;
+        var y = canvasSize.Height - FooterHeight + 14 - FooterVerticalLift;
         return new Dictionary<FooterControlKind, Rectangle>
         {
-            [FooterControlKind.WorkTimer] = new Rectangle(startX, y, FooterCardWidth, FooterCardHeight),
-            [FooterControlKind.Pomodoro] = new Rectangle(startX + FooterCardWidth + FooterCardGap, y, FooterCardWidth, FooterCardHeight)
+            [FooterControlKind.Menu] = new Rectangle(startX, y + 2, FooterMenuButtonSize, FooterMenuButtonSize),
+            [FooterControlKind.WorkTimer] = new Rectangle(startX + FooterMenuButtonSize + FooterCardGap, y, FooterCardWidth, FooterCardHeight),
+            [FooterControlKind.Pomodoro] = new Rectangle(startX + FooterMenuButtonSize + FooterCardGap * 2 + FooterCardWidth, y, FooterCardWidth, FooterCardHeight)
         };
     }
 
     private static Rectangle FooterArea(Size canvasSize) => new(0, Math.Max(0, canvasSize.Height - FooterHeight), canvasSize.Width, FooterHeight);
 
-    private static int FooterContentWidth => FooterCardWidth * 2 + FooterCardGap + FooterSidePadding * 2;
+    private static int FooterContentWidth => FooterMenuButtonSize + FooterCardWidth * 2 + FooterCardGap * 2 + FooterSidePadding * 2;
+
+    private static void DrawMenuButton(Graphics graphics, Rectangle bounds)
+    {
+        using var shadowBrush = new SolidBrush(Color.FromArgb(24, 0, 0, 0));
+        using var fillBrush = new SolidBrush(Color.FromArgb(238, 251, 251, 248));
+        using var borderPen = new Pen(Color.FromArgb(220, 229, 221));
+        using var shadowPath = RoundedPath(new Rectangle(bounds.X, bounds.Y + 2, bounds.Width, bounds.Height), 12);
+        using var path = RoundedPath(bounds, 12);
+        graphics.FillPath(shadowBrush, shadowPath);
+        graphics.FillPath(fillBrush, path);
+        graphics.DrawPath(borderPen, path);
+
+        using var plusPen = new Pen(FluentTheme.Accent, 2.4f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+        var centerX = bounds.Left + bounds.Width / 2f;
+        var centerY = bounds.Top + bounds.Height / 2f;
+        graphics.DrawLine(plusPen, centerX - 7, centerY, centerX + 7, centerY);
+        graphics.DrawLine(plusPen, centerX, centerY - 7, centerX, centerY + 7);
+    }
 
     private static void DrawTimerCard(Graphics graphics, Rectangle bounds, string iconText, string title, string value, Color accent, Color valueColor, bool emphasize = false)
     {
@@ -158,7 +181,7 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
         graphics.FillPath(cardBrush, path);
         graphics.DrawPath(borderPen, path);
 
-        var iconBounds = new Rectangle(bounds.Left + 10, bounds.Top + 9, 24, 24);
+        var iconBounds = new Rectangle(bounds.Left + 10, bounds.Top + 11, 24, 24);
         using var iconBrush = new SolidBrush(Color.FromArgb(emphasize ? 244 : 235, accent));
         using var iconTextBrush = new SolidBrush(Color.White);
         graphics.FillEllipse(iconBrush, iconBounds);
@@ -170,8 +193,8 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
         using var valueBrush = new SolidBrush(valueColor);
         using var titleFont = new Font("Microsoft YaHei UI", 7.5f);
         using var valueFont = new Font("Consolas", 12f, FontStyle.Bold);
-        var titleRect = new RectangleF(bounds.Left + 42, bounds.Top + 12, 66, 18);
-        var valueRect = new RectangleF(bounds.Left + 110, bounds.Top + 8, bounds.Width - 118, 24);
+        var titleRect = new RectangleF(bounds.Left + 42, bounds.Top + 13, 66, 18);
+        var valueRect = new RectangleF(bounds.Left + 110, bounds.Top + 10, bounds.Width - 118, 24);
         var valueFormat = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
         graphics.DrawString(title, titleFont, titleBrush, titleRect);
         graphics.DrawString(value, valueFont, valueBrush, valueRect, valueFormat);
@@ -235,6 +258,26 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
         if (animation?.Kind == PotAnimationKind.Water)
         {
             DrawWater(graphics, slot, animation.Progress(now));
+        }
+    }
+
+    private void DrawGrass(Graphics graphics, int left, int bottomY, int width, int grassHeight)
+    {
+        if (width <= 0 || grassHeight <= 0 || !File.Exists(catalog.GrassPath))
+        {
+            return;
+        }
+
+        var source = images.Get(catalog.GrassPath);
+        var tileWidth = Math.Max(1, (int)Math.Round(source.Width * (grassHeight / (float)source.Height)));
+        var grassTop = bottomY - grassHeight;
+        var drawBounds = new Rectangle(left, grassTop, width, grassHeight);
+        using var scope = new GraphicsStateScope(graphics);
+        graphics.SetClip(drawBounds);
+        var scaledTile = images.GetScaled(catalog.GrassPath, new Size(tileWidth, grassHeight));
+        for (var x = drawBounds.Left; x < drawBounds.Right; x += tileWidth)
+        {
+            graphics.DrawImageUnscaled(scaledTile, x, drawBounds.Top);
         }
     }
 
@@ -308,6 +351,17 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
 
     private static int Scale(float value, float scale) => Math.Max(1, (int)Math.Round(value * scale));
 
+    private GardenLayout BuildLayout(IReadOnlyList<PotInstance> pots, float gapScale, float effectiveScale)
+    {
+        var gap = Scale(LayoutCalculator.GetGap(gapScale), effectiveScale);
+        var slotSizes = GetSlotSizes(pots, effectiveScale);
+        var slotHeight = Math.Max(1, slotSizes.Count == 0 ? Scale(LayoutCalculator.BaseSlotHeight, effectiveScale) : slotSizes.Max(size => size.Height));
+        var stripWidth = Math.Max(1, slotSizes.Sum(size => size.Width) + Math.Max(0, slotSizes.Count - 1) * gap);
+        var grassHeight = Scale(GrassBaseHeight, effectiveScale);
+        var grassVisibleBelow = grassHeight - (int)Math.Round(grassHeight * GrassOverlapRatio);
+        return new GardenLayout(slotSizes, gap, stripWidth, slotHeight + grassVisibleBelow, slotHeight, grassHeight);
+    }
+
     private List<Size> GetSlotSizes(IReadOnlyList<PotInstance> pots, float effectiveScale) => pots
         .Select(pot =>
         {
@@ -320,4 +374,19 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
             return new Size(slotWidth, slotHeight);
         })
         .ToList();
+
+    private sealed record GardenLayout(
+        IReadOnlyList<Size> SlotSizes,
+        int Gap,
+        int PotStripWidth,
+        int PotAreaHeight,
+        int PotBaselineY,
+        int GrassHeight);
+
+    private sealed class GraphicsStateScope(Graphics graphics) : IDisposable
+    {
+        private readonly Graphics _graphics = graphics;
+        private readonly GraphicsState _state = graphics.Save();
+        public void Dispose() => _graphics.Restore(_state);
+    }
 }

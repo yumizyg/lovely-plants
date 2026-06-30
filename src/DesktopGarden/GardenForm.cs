@@ -73,6 +73,7 @@ internal sealed class GardenForm : Form
     public event Action? ReminderDue;
     public event Action? PomodoroConfigureRequested;
     public event Action? PomodoroCompleted;
+    public event Action<Rectangle>? QuickMenuRequested;
 
     protected override bool ShowWithoutActivation => true;
 
@@ -364,6 +365,15 @@ internal sealed class GardenForm : Form
 
     private void HandleFooterClick(FooterControlKind footer, MouseButtons button)
     {
+        if (footer == FooterControlKind.Menu)
+        {
+            if (button is MouseButtons.Left or MouseButtons.Right)
+            {
+                QuickMenuRequested?.Invoke(FooterScreenBounds(footer));
+            }
+            return;
+        }
+
         if (footer != FooterControlKind.Pomodoro) return;
 
         if (button == MouseButtons.Right)
@@ -459,6 +469,16 @@ internal sealed class GardenForm : Form
         var local = PointToClient(Cursor.Position);
         if (local.X < 0 || local.Y < 0 || local.X >= _render.Bitmap.Width || local.Y >= _render.Bitmap.Height) return false;
         return _render.Bitmap.GetPixel(local.X, local.Y).A > 12;
+    }
+
+    private Rectangle FooterScreenBounds(FooterControlKind control)
+    {
+        if (!_footerControls.TryGetValue(control, out var bounds))
+        {
+            return Rectangle.Empty;
+        }
+
+        return new Rectangle(Left + bounds.Left, Top + bounds.Top, bounds.Width, bounds.Height);
     }
 
     private void OnAnimationFrame()
