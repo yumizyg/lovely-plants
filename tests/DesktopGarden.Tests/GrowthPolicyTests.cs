@@ -20,12 +20,25 @@ public sealed class GrowthPolicyTests
     {
         var state = new GardenState
         {
-            Pots = [new PotInstance { ElapsedRunSeconds = 10 }]
+            Pots = [new PotInstance { PlantId = "Sunflower", ElapsedRunSeconds = 10 }]
         };
 
         GrowthPolicy.Accumulate(state, TimeSpan.FromSeconds(5));
 
         Assert.Equal(15, state.Pots[0].ElapsedRunSeconds);
+    }
+
+    [Fact]
+    public void AccumulateSkipsEmptyPots()
+    {
+        var state = new GardenState
+        {
+            Pots = [new PotInstance { PlantId = "", ElapsedRunSeconds = 10 }]
+        };
+
+        GrowthPolicy.Accumulate(state, TimeSpan.FromSeconds(5));
+
+        Assert.Equal(10, state.Pots[0].ElapsedRunSeconds);
     }
 
     [Theory]
