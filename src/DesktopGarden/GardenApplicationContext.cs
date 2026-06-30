@@ -383,7 +383,8 @@ internal sealed class GardenApplicationContext : ApplicationContext
         _plantInfo.Hide();
         using var timer = new PomodoroForm();
         timer.SetDuration(_garden.CurrentPomodoroDuration);
-        if (timer.ShowDialog() != DialogResult.OK) return;
+        var result = _garden.Visible ? timer.ShowDialog(_garden) : timer.ShowDialog();
+        if (result != DialogResult.OK) return;
         _garden.SetPomodoro(timer.SelectedDuration);
     }
 

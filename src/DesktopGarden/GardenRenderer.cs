@@ -42,6 +42,7 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
     private const float GrassOverlapRatio = 0.46f;
     private const int GrassBaseHeight = 224;
     private const int GrassVerticalLift = 25;
+    private const int PotStripVerticalLift = 5;
 
     public Size Measure(GardenState state, float effectiveScale)
     {
@@ -83,7 +84,7 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
 
         var now = renderTimeUtc ?? DateTime.UtcNow;
         var x = Math.Max(0, (width - layout.PotStripWidth) / 2);
-        if (state.Settings.ShowGrassBackground)
+        if (state.Settings.ShowGrassBackground && layout.GrassHeight > 0)
         {
             DrawGrass(graphics, x, height - FooterHeight - GrassVerticalLift, layout.PotStripWidth, layout.GrassHeight);
         }
@@ -91,7 +92,7 @@ internal sealed class GardenRenderer(AssetCatalog catalog, ImageCache images)
         for (var index = 0; index < pots.Count; index++)
         {
             var size = layout.SlotSizes[index];
-            var slot = new Rectangle(x, layout.PotBaselineY - size.Height, size.Width, size.Height);
+            var slot = new Rectangle(x, layout.PotBaselineY - size.Height - PotStripVerticalLift, size.Width, size.Height);
             slots.Add(slot);
             var pot = pots[index];
             DrawPot(

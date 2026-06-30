@@ -159,7 +159,7 @@ internal sealed class FluentSlider : Control
     private bool _dragging;
 
     internal int Minimum { get; init; } = 60;
-    internal int Maximum { get; init; } = 140;
+    internal int Maximum { get; init; } = 300;
     internal int Value
     {
         get => _value;

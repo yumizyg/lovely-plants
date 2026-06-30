@@ -40,7 +40,7 @@ public static class GardenStateFactory
         {
             state.Pots[index].SortOrder = index;
             state.Pots[index].ElapsedRunSeconds = Math.Max(0, state.Pots[index].ElapsedRunSeconds);
-            state.Pots[index].Scale = state.Pots[index].Scale <= 0 ? 1f : Math.Clamp(state.Pots[index].Scale, 0.6f, 1.4f);
+            state.Pots[index].Scale = state.Pots[index].Scale <= 0 ? 1f : Math.Clamp(state.Pots[index].Scale, 0.6f, 3f);
             if (string.IsNullOrWhiteSpace(state.Pots[index].PlantId))
             {
                 state.Pots[index].ElapsedRunSeconds = 0;
@@ -49,7 +49,7 @@ public static class GardenStateFactory
 
         state.SchemaVersion = 3;
         state.Settings.Scale = Math.Clamp(state.Settings.Scale, 0.5f, 1.2f);
-        state.Settings.GapScale = Math.Clamp(state.Settings.GapScale, 0.6f, 2f);
+        state.Settings.GapScale = Math.Clamp(state.Settings.GapScale, 0.6f, 8f);
         state.Settings.MonitorIndex = Math.Max(0, state.Settings.MonitorIndex);
     }
 }

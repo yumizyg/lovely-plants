@@ -26,7 +26,7 @@ public static class LayoutCalculator
         return Math.Clamp(Math.Min(preferredScale, available / (float)requiredAtOne) * VisualScaleMultiplier, 0.125f, 0.6f);
     }
 
-    public static float GetGap(float gapScale) => BaseGap * Math.Clamp(gapScale, 0.6f, 2f);
+    public static float GetGap(float gapScale) => BaseGap * Math.Clamp(gapScale, 0.6f, 8f);
 
     private static float ToRenderedScale(float preferredScale) => Math.Clamp(preferredScale, 0.5f, 1.2f) * VisualScaleMultiplier;
 }

@@ -13,7 +13,7 @@ internal sealed class PotInspectorForm : Form
     private readonly Label _expressionValue = new();
     private readonly Label _scaleValue = new();
     private readonly FluentProgressBar _progress = new();
-    private readonly FluentSlider _scale = new();
+    private readonly FluentSlider _scale = new() { Minimum = 60, Maximum = 300 };
     private Image? _previewImage;
 
     public PotInspectorForm(PotInstance pot, AssetCatalog catalog, Rectangle anchor)
@@ -79,7 +79,7 @@ internal sealed class PotInspectorForm : Form
         _plantValue.Text = _catalog.PlantName(Pot.PlantId);
         _potValue.Text = _catalog.PotName(Pot.PotId);
         _expressionValue.Text = _catalog.ExpressionName(Pot.ExpressionId);
-        _scale.Value = (int)Math.Round(Math.Clamp(Pot.Scale, 0.6f, 1.4f) * 100);
+        _scale.Value = (int)Math.Round(Math.Clamp(Pot.Scale, 0.6f, 3f) * 100);
         UpdateScaleLabel();
         SetPreview(hasPlant ? _catalog.PlantPath(Pot.PlantId, Pot.GrowthStage) : _catalog.PotPath(Pot.PotId));
     }

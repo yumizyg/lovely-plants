@@ -7,7 +7,7 @@ internal sealed class SettingsForm : Form
     private readonly ComboBox _monitor = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly TrackBar _scale = new() { Minimum = 50, Maximum = 120, TickFrequency = 10, SmallChange = 5, LargeChange = 10 };
     private readonly Label _scaleValue = new() { AutoSize = true };
-    private readonly TrackBar _gapScale = new() { Minimum = 60, Maximum = 200, TickFrequency = 10, SmallChange = 5, LargeChange = 10 };
+    private readonly TrackBar _gapScale = new() { Minimum = 60, Maximum = 800, TickFrequency = 20, SmallChange = 10, LargeChange = 20 };
     private readonly Label _gapScaleValue = new() { AutoSize = true };
     private readonly CheckBox _topMost = new() { Text = "始终置顶", AutoSize = true };
     private readonly CheckBox _locked = new() { Text = "锁定后鼠标穿透", AutoSize = true };
@@ -35,7 +35,7 @@ internal sealed class SettingsForm : Form
 
         _monitor.SelectedIndex = Math.Clamp(settings.MonitorIndex, 0, Math.Max(0, _monitor.Items.Count - 1));
         _scale.Value = (int)Math.Round(Math.Clamp(settings.Scale, 0.5f, 1.2f) * 100);
-        _gapScale.Value = (int)Math.Round(Math.Clamp(settings.GapScale, 0.6f, 2f) * 100);
+        _gapScale.Value = (int)Math.Round(Math.Clamp(settings.GapScale, 0.6f, 8f) * 100);
         _topMost.Checked = settings.AlwaysOnTop;
         _locked.Checked = settings.InteractionLocked;
         _showGrass.Checked = settings.ShowGrassBackground;

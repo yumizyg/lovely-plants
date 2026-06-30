@@ -12,6 +12,8 @@ internal sealed class PomodoroForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
+        ShowInTaskbar = false;
+        TopMost = true;
         ClientSize = new Size(300, 166);
         BackColor = Color.FromArgb(248, 247, 243);
         Font = new Font("Microsoft YaHei UI", 9f);

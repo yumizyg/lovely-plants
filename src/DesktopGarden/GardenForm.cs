@@ -573,6 +573,7 @@ internal sealed class GardenForm : Form
         '|',
         effectiveScale.ToString("F3", System.Globalization.CultureInfo.InvariantCulture),
         _state.Settings.GapScale.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+        _state.Settings.ShowGrassBackground ? "grass-on" : "grass-off",
         string.Join(';', _state.Pots.Select(pot => $"{pot.Id}:{pot.PlantId}:{pot.GrowthStage}:{pot.PotId}:{pot.ExpressionId}:{pot.Scale:F2}")));
 
     private GardenOverlayState BuildOverlayState()

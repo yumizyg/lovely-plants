@@ -21,7 +21,7 @@ public sealed class LayoutCalculatorTests
     public void LargerGapReducesCapacity()
     {
         var compact = LayoutCalculator.GetCapacity(1920, 1f, 0.6f);
-        var roomy = LayoutCalculator.GetCapacity(1920, 1f, 2f);
+        var roomy = LayoutCalculator.GetCapacity(1920, 1f, 8f);
         Assert.True(roomy < compact);
     }
 
@@ -41,5 +41,20 @@ public sealed class LayoutCalculatorTests
 
         Assert.Equal([0, 1], state.Pots.Select(pot => pot.SortOrder));
         Assert.All(state.Pots, pot => Assert.Equal(1f, pot.Scale));
+    }
+
+    [Fact]
+    public void NormalizeAllowsLargerPotScaleAndGap()
+    {
+        var state = new GardenState
+        {
+            Settings = new AppSettings { GapScale = 9f },
+            Pots = [new PotInstance { PlantId = "Rose", Scale = 4f }]
+        };
+
+        GardenStateFactory.Normalize(state);
+
+        Assert.Equal(8f, state.Settings.GapScale);
+        Assert.Equal(3f, state.Pots[0].Scale);
     }
 }

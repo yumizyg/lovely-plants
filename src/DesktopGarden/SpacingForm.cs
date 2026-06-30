@@ -2,7 +2,7 @@ namespace DesktopGarden;
 
 internal sealed class SpacingForm : Form
 {
-    private readonly FluentSlider _slider = new() { Minimum = 60, Maximum = 200 };
+    private readonly FluentSlider _slider = new() { Minimum = 60, Maximum = 800 };
     private readonly Label _value = new() { AutoSize = true, Font = FluentTheme.Caption, ForeColor = FluentTheme.TextMuted };
 
     public SpacingForm(float gapScale)
@@ -35,7 +35,7 @@ internal sealed class SpacingForm : Form
         };
         _slider.Location = new Point(20, 82);
         _slider.Width = 250;
-        _slider.Value = (int)Math.Round(Math.Clamp(gapScale, 0.6f, 2f) * 100);
+        _slider.Value = (int)Math.Round(Math.Clamp(gapScale, 0.6f, 8f) * 100);
         _slider.ValueChanged += (_, _) => UpdateValue();
         _value.Location = new Point(284, 88);
         var ok = new Button { Text = "确定", DialogResult = DialogResult.OK, AutoSize = true, Location = new Point(186, 118) };
