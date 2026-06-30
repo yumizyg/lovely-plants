@@ -14,7 +14,7 @@ public sealed class LayoutCalculatorTests
     public void FitScaleShrinksCrowdedGarden()
     {
         var scale = LayoutCalculator.FitScale(1366, 8, 1f);
-        Assert.InRange(scale, 0.5f, 0.7f);
+        Assert.InRange(scale, 0.3f, 0.35f);
     }
 
     [Fact]
