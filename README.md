@@ -44,7 +44,7 @@ English: Each slot is composited from three visual layers—plant, pot, and expr
 中文：植物成长只统计软件实际运行时间，累计 8 小时进入第二阶段，累计 40 小时进入第三阶段；关闭软件后不会离线成长。  
 English: Plant growth only counts real app runtime: stage two starts after 8 accumulated hours and stage three starts after 40 accumulated hours; plants do not grow while the app is closed.
 
-![Plants Overview](docs/images/1.png)
+![Plants Overview](docs/images/2.png)
 
 中文：更换植物会清空该花盆的成长时间，但花盆、表情和缩放设置可以继续保留。  
 English: Changing the plant resets growth time for that pot, while the selected pot, expression, and scale can remain unchanged.
