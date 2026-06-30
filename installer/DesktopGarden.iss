@@ -1,5 +1,5 @@
 #define MyAppName "Lovely Plants"
-#define MyAppVersion "1.1.1"
+#define MyAppVersion "1.1.2"
 #define MyAppPublisher "yumizyg"
 #define MyAppExeName "LovelyPlants.exe"
 
